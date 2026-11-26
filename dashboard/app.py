@@ -1,4 +1,6 @@
 import sqlite3
+import shutil
+import zipfile
 from pathlib import Path
 
 import pandas as pd
@@ -8,6 +10,19 @@ import streamlit as st
 st.set_page_config(page_title="Airtel Telecom Analytics", layout="wide")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEPLOY_DB_ZIP = PROJECT_ROOT / "data" / "airtel.db.zip"
+DEPLOY_DB_PATH = PROJECT_ROOT / "data" / "airtel.db"
+
+if (DEPLOY_DB_ZIP.exists()
+        and (not DEPLOY_DB_PATH.exists() or DEPLOY_DB_PATH.stat().st_size == 0)):
+    try:
+        with zipfile.ZipFile(DEPLOY_DB_ZIP, "r") as archive:
+            with archive.open("airtel.db", "r") as source:
+                with DEPLOY_DB_PATH.open("wb") as target:
+                    shutil.copyfileobj(source, target)
+    except (zipfile.BadZipFile, KeyError, OSError):
+        pass
+
 DB_PATH = next(
     (path for path in (
         PROJECT_ROOT / "airtel.db",
